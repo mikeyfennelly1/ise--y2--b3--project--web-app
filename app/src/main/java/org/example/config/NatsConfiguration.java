@@ -8,7 +8,7 @@ import io.nats.client.Options;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import org.example.model.SysinfoMessage;
-import org.example.service.SysinfoMessageService;
+import org.example.repository.SysinfoMessageRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanCreationException;
@@ -35,10 +35,10 @@ public class NatsConfiguration {
     @Getter
     private Connection connection;
 
-    private final SysinfoMessageService service;
+    private final SysinfoMessageRepository sysinfoMessageRepository;
 
-    public NatsConfiguration(SysinfoMessageService service) {
-        this.service = service;
+    public NatsConfiguration(SysinfoMessageRepository repository) {
+        this.sysinfoMessageRepository = repository;
     }
 
     @PostConstruct
@@ -64,7 +64,7 @@ public class NatsConfiguration {
     private void handleNewMessage(Message message) {
         try {
             var msg = jsonMapper.readValue(new String(message.getData(), StandardCharsets.UTF_8), SysinfoMessage.class);
-            service.save(msg);
+            sysinfoMessageRepository.save(msg);
         } catch (IOException e) {
             logger.error("failed to deserialize message from subject '{}': {}", sysinfoSubject, e.getMessage());
         }
