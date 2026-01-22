@@ -1,6 +1,0 @@
-= Time-series metric aggregator service
-
-[NOTE]
-This project is for CoTC & Mobile App Development for Y2/B3 of ISE. link:https://github.com/mikeyfennelly1/ise--y2--b3--project[Main project repo].
-
-Service that is responsible for aggregating metrics from producing applications in the project.
