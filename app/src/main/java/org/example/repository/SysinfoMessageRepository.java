@@ -11,4 +11,8 @@ public interface SysinfoMessageRepository extends JpaRepository<SysinfoMessage, 
 
     @Query("SELECT DISTINCT s.macAddress FROM SysinfoMessage s")
     List<String> findDistinctMacAddresses();
+
+    List<SysinfoMessage> findByMacAddress(String macAddress);
+
+    boolean existsByMacAddress(String macAddress);
 }
