@@ -1,0 +1,134 @@
+name: Transactional release of GitHub Source tags and Docker artifacts
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+
+  ########################################################################
+  # 0. VALIDATE COMMIT MESSAGE
+  ########################################################################
+
+  lint-commit:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate commit messages
+        uses: wagoid/commitlint-github-action@v5
+        with:
+          configFile: './commitlint.config.js'
+          failOnWarnings: true
+          commitDepth: 1
+
+  ########################################################################
+  # 1. COMPUTE NEXT VERSION (DRY RUN)
+  ########################################################################
+
+  compute-version:
+    needs: lint-commit
+    runs-on: ubuntu-22.04
+    outputs:
+      next_version: ${{ steps.semantic.outputs.new_release_version }}
+      will_release: ${{ steps.semantic.outputs.new_release_published }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run semantic-release (dry run)
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          dry_run: true
+          semantic_version: 21
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Print next version
+        run: |
+          echo "Next version: ${{ steps.semantic.outputs.new_release_version }}"
+          echo "Will release: ${{ steps.semantic.outputs.new_release_published }}"
+
+  ########################################################################
+  # 2. BUILD + PUSH DOCKER IMAGE (ONLY IF NEW VERSION EXISTS)
+  ########################################################################
+
+  build-and-push-docker:
+    needs: compute-version
+    if: ${{ needs.compute-version.outputs.will_release == 'true' }}
+    runs-on: ubuntu-22.04
+
+    outputs:
+      version: ${{ needs.compute-version.outputs.next_version }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Load workflow values
+        run: |
+          echo "DOCKERHUB_USERNAME=$(yq e '.DOCKERHUB_USERNAME' .github/workflow-values.yml)" >> $GITHUB_ENV
+          echo "IMAGE_NAME=$(yq e '.IMAGE_NAME' .github/workflow-values.yml)" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:v${{ needs.compute-version.outputs.next_version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  ########################################################################
+  # 3. PUBLISH GITHUB RELEASE (ONLY AFTER DOCKER SUCCEEDS)
+  ########################################################################
+
+  publish-release:
+    needs:
+      - compute-version
+      - build-and-push-docker
+    if: ${{ needs.compute-version.outputs.will_release == 'true' }}
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Publish GitHub release
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          semantic_version: 21
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
