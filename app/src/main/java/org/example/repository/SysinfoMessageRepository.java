@@ -1,6 +1,6 @@
 package org.example.repository;
 
-import org.example.model.SysinfoMessage;
+import org.example.model.source.device.SysinfoMessage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.Query;
@@ -13,6 +13,8 @@ public interface SysinfoMessageRepository extends JpaRepository<SysinfoMessage, 
     List<String> findDistinctMacAddresses();
 
     List<SysinfoMessage> findByMacAddress(String macAddress);
+
+    List<SysinfoMessage> findByMacAddressAndReadTimeBetween(String macAddress, long startTime, long endTime);
 
     boolean existsByMacAddress(String macAddress);
 }
