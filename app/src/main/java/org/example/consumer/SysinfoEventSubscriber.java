@@ -1,4 +1,4 @@
-package org.example.service;
+package org.example.consumer;
 
 import io.nats.client.Dispatcher;
 import jakarta.annotation.PostConstruct;
