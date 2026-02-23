@@ -7,7 +7,7 @@ import io.nats.client.Nats;
 import io.nats.client.Options;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
-import org.example.model.SysinfoMessage;
+import org.example.model.source.device.SysinfoMessage;
 import org.example.repository.SysinfoMessageRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
