@@ -1,3 +1,20 @@
+# [1.1.0](https://github.com/mikeyfennelly1/ise--y2--b3--project--web-app/compare/v1.0.0...v1.1.0) (2026-02-23)
+
+
+### Features
+
+* category controller ([11b2c91](https://github.com/mikeyfennelly1/ise--y2--b3--project--web-app/commit/11b2c917f438905a32ec0dc74c288b5d7b1d53e3))
+* CategoryService ([9c5f186](https://github.com/mikeyfennelly1/ise--y2--b3--project--web-app/commit/9c5f186ab2a4387ed87ec3be25afeb341177ea9d))
+* create ReportingController ([013511f](https://github.com/mikeyfennelly1/ise--y2--b3--project--web-app/commit/013511f7f69daf1db5d96103d922824824bf387f))
+* Device ([d29e7d8](https://github.com/mikeyfennelly1/ise--y2--b3--project--web-app/commit/d29e7d81a52e72624a35e1e23960898ff9f741ea))
+* DeviceController ([4aa9a17](https://github.com/mikeyfennelly1/ise--y2--b3--project--web-app/commit/4aa9a17dfacdd92f89236eb37051a981112f1156))
+* DeviceRepository ([f6907b5](https://github.com/mikeyfennelly1/ise--y2--b3--project--web-app/commit/f6907b5956eab4c7ba36f6fd586445703b84f8f9))
+* DeviceType ([5f71357](https://github.com/mikeyfennelly1/ise--y2--b3--project--web-app/commit/5f713571de39bb191867e83bbd745f2e5e974272))
+* find timeseries data between mac address and read time ([ffba9f0](https://github.com/mikeyfennelly1/ise--y2--b3--project--web-app/commit/ffba9f029f05f543ff96cd602f5e63bbe6a6e883))
+* SourceCategory ([314cccb](https://github.com/mikeyfennelly1/ise--y2--b3--project--web-app/commit/314cccbb8165a7e9233b012fb7ef835a93a4e3bf))
+* SourceCategoryDTO ([f90134d](https://github.com/mikeyfennelly1/ise--y2--b3--project--web-app/commit/f90134dc34db89eef5d744d4b3658ab7c446801f))
+* SourceCategoryService ([ff7157f](https://github.com/mikeyfennelly1/ise--y2--b3--project--web-app/commit/ff7157f024a5e0107dcee7f09015b6efbd8df61d))
+
 # 1.0.0 (2026-02-18)
 
 
