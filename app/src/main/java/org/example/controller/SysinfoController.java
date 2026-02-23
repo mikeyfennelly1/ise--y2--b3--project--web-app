@@ -1,7 +1,10 @@
 package org.example.controller;
 
-import org.example.model.MacAddressMetadata;
+import org.example.model.source.device.MacAddressMetadata;
+import org.example.model.source.device.SysinfoMessage;
 import org.example.repository.SysinfoMessageRepository;
+import org.example.service.CategoryService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,12 +15,18 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/sysinfo")
-public class SysinfoMessageController {
+public class SysinfoController {
 
     private final SysinfoMessageRepository sysinfoMessageRepository;
+    private final CategoryService categoryService;
 
-    public SysinfoMessageController(SysinfoMessageRepository sysinfoMessageRepository) {
+    @Autowired
+    public SysinfoController(
+            SysinfoMessageRepository sysinfoMessageRepository,
+            CategoryService categoryService
+    ) {
         this.sysinfoMessageRepository = sysinfoMessageRepository;
+        this.categoryService = categoryService;
     }
 
     @GetMapping("/mac-addresses")
@@ -39,5 +48,15 @@ public class SysinfoMessageController {
                 return ResponseEntity.notFound().build();
             }
         }
+    }
+
+
+
+    @GetMapping("/")
+    public List<SysinfoMessage> getSysinfoReport(
+            @RequestParam("device_id") String deviceId,
+            @RequestParam("start_date") Long startDate,
+            @RequestParam("end_date") Long endDate) {
+        return categoryService.getSysinfoReport(deviceId, startDate, endDate);
     }
 }
