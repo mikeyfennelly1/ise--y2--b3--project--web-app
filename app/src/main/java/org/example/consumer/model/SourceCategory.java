@@ -1,4 +1,4 @@
-package org.example.model.source;
+package org.example.consumer.model;
 
 public enum SourceCategory {
     device,

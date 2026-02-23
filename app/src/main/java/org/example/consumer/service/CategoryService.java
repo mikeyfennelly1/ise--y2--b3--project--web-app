@@ -1,8 +1,8 @@
-package org.example.service;
+package org.example.consumer.service;
 
-import org.example.model.source.SourceCategory;
-import org.example.model.source.device.SysinfoMessage;
-import org.example.repository.SysinfoMessageRepository;
+import org.example.consumer.model.SourceCategory;
+import org.example.consumer.model.device.SysinfoMessage;
+import org.example.consumer.repository.TimeseriesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,10 +11,10 @@ import java.util.List;
 @Service
 public class CategoryService {
 
-    private final SysinfoMessageRepository sysinfoMessageRepository;
+    private final TimeseriesRepository sysinfoMessageRepository;
 
     @Autowired
-    public CategoryService(SysinfoMessageRepository sysinfoMessageRepository) {
+    public CategoryService(TimeseriesRepository sysinfoMessageRepository) {
         this.sysinfoMessageRepository = sysinfoMessageRepository;
     }
 

@@ -1,7 +1,7 @@
-package org.example.controller;
+package org.example.reporting.config.controller;
 
-import org.example.model.source.device.Device;
-import org.example.repository.DeviceRepository;
+import org.example.consumer.model.device.Device;
+import org.example.consumer.repository.DeviceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

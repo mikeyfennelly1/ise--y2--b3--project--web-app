@@ -1,9 +1,9 @@
-package org.example.controller;
+package org.example.reporting.config.controller;
 
-import org.example.model.source.SourceCategory;
-import org.example.model.source.SourceCategoryDTO;
-import org.example.service.CategoryService;
-import org.example.service.SourceCategoryService;
+import org.example.consumer.model.SourceCategory;
+import org.example.consumer.model.SourceCategoryDTO;
+import org.example.consumer.service.CategoryService;
+import org.example.consumer.service.SourceCategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

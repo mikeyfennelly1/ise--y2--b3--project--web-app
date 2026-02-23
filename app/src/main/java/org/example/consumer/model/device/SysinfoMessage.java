@@ -1,4 +1,4 @@
-package org.example.model.source.device;
+package org.example.consumer.model.device;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;

@@ -1,8 +1,8 @@
-package org.example.service;
+package org.example.consumer.service;
 
-import org.example.model.source.SourceCategory;
-import org.example.model.source.SourceCategoryDTO;
-import org.example.model.source.device.DeviceType;
+import org.example.consumer.model.SourceCategory;
+import org.example.consumer.model.SourceCategoryDTO;
+import org.example.consumer.model.device.DeviceType;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;

@@ -1,9 +1,9 @@
-package org.example.controller;
+package org.example.reporting.config.controller;
 
-import org.example.model.source.device.MacAddressMetadata;
-import org.example.model.source.device.SysinfoMessage;
-import org.example.repository.SysinfoMessageRepository;
-import org.example.service.CategoryService;
+import org.example.consumer.model.device.MacAddressMetadata;
+import org.example.consumer.model.device.SysinfoMessage;
+import org.example.consumer.repository.TimeseriesRepository;
+import org.example.consumer.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,12 +17,12 @@ import java.util.List;
 @RequestMapping("/api/sysinfo")
 public class SysinfoController {
 
-    private final SysinfoMessageRepository sysinfoMessageRepository;
+    private final TimeseriesRepository sysinfoMessageRepository;
     private final CategoryService categoryService;
 
     @Autowired
     public SysinfoController(
-            SysinfoMessageRepository sysinfoMessageRepository,
+            TimeseriesRepository sysinfoMessageRepository,
             CategoryService categoryService
     ) {
         this.sysinfoMessageRepository = sysinfoMessageRepository;

@@ -1,13 +1,13 @@
-package org.example.repository;
+package org.example.consumer.repository;
 
-import org.example.model.source.device.SysinfoMessage;
+import org.example.consumer.model.device.SysinfoMessage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 @Repository
-public interface SysinfoMessageRepository extends JpaRepository<SysinfoMessage, Long> {
+public interface TimeseriesRepository extends JpaRepository<SysinfoMessage, Long> {
 
     @Query("SELECT DISTINCT s.macAddress FROM SysinfoMessage s")
     List<String> findDistinctMacAddresses();

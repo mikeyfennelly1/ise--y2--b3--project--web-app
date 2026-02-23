@@ -1,4 +1,4 @@
-package org.example.config;
+package org.example.consumer.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nats.client.Connection;
@@ -7,8 +7,8 @@ import io.nats.client.Nats;
 import io.nats.client.Options;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
-import org.example.model.source.device.SysinfoMessage;
-import org.example.repository.SysinfoMessageRepository;
+import org.example.consumer.model.device.SysinfoMessage;
+import org.example.consumer.repository.TimeseriesRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanCreationException;
@@ -35,9 +35,9 @@ public class NatsConfiguration {
     @Getter
     private Connection connection;
 
-    private final SysinfoMessageRepository sysinfoMessageRepository;
+    private final TimeseriesRepository sysinfoMessageRepository;
 
-    public NatsConfiguration(SysinfoMessageRepository repository) {
+    public NatsConfiguration(TimeseriesRepository repository) {
         this.sysinfoMessageRepository = repository;
     }
 

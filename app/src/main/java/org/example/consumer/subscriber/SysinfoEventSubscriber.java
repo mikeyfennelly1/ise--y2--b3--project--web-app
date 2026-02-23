@@ -1,8 +1,8 @@
-package org.example.consumer;
+package org.example.consumer.subscriber;
 
 import io.nats.client.Dispatcher;
 import jakarta.annotation.PostConstruct;
-import org.example.config.NatsConfiguration;
+import org.example.consumer.config.NatsConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

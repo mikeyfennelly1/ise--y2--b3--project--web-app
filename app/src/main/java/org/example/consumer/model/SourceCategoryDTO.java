@@ -1,4 +1,4 @@
-package org.example.model.source;
+package org.example.consumer.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,6 +1,6 @@
-package org.example.repository;
+package org.example.consumer.repository;
 
-import org.example.model.source.device.Device;
+import org.example.consumer.model.device.Device;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
