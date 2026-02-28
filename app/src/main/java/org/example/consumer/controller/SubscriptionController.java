@@ -42,14 +42,4 @@ public class SubscriptionController {
     public List<String> getSubcategories(@RequestParam String category) {
         return subscriptionManager.getSubcategoriesByCategory(category);
     }
-
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<String> handleInvalidCategory(MethodArgumentTypeMismatchException ex) {
-        if (ex.getRequiredType() != null && ex.getRequiredType().equals(SourceCategory.class)) {
-            String valid = subscriptionManager.getAvailableCategoriesAsString();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Invalid category '" + ex.getValue() + "'. Valid categories are: " + valid);
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-    }
 }
