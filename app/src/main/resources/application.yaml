@@ -20,3 +20,10 @@ server:
 logging:
   level:
     root: INFO
+    org.example: DEBUG
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui
