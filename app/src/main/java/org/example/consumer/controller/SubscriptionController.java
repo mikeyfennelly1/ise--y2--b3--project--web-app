@@ -58,8 +58,18 @@ public class SubscriptionController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/subcategories")
-    public List<String> getSubcategories(@RequestParam String category) {
-        return subscriptionManager.getSubcategoriesByCategory(category);
+    @GetMapping("/children")
+    public ResponseEntity<?> getChildSubscriptions(@RequestParam String parent) {
+        logger.debug("GET /api/consumer/subscriptions/children - parent='{}'", parent);
+        try {
+            List<SubscriptionNode> childSubscriptions = subscriptionFactory.getChildSubscriptions(parent);
+            return ResponseEntity.ok(childSubscriptions);
+        } catch (InvalidSubscriptionTreePathFormatException e) {
+            logger.debug("GET /api/consumer/subscriptions/children - rejected: invalid path format - {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (TreePathNotFoundException e) {
+            logger.debug("GET /api/consumer/subscriptions/children - rejected: parent path not found - {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
     }
 }
