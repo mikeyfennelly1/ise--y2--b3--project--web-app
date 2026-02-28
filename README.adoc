@@ -1,4 +1,10 @@
-= Web Application (Queue consumer) for ISE year 2, block 3 project
+= ise--y2--b3--project--web-app
+
+Spring Boot web application that subscribes to a NATS message broker, persists received messages to PostgreSQL, and exposes a REST API for managing subscriptions and querying time-series data.
+
+:toc:
+:toc-title: Contents
+:toclevels: 2
 
 == Starting the application
 
