@@ -18,6 +18,6 @@ public class NatsConfiguration {
 
     @PostConstruct
     void logConfig() {
-        logger.debug("NatsConfiguration loaded — port: {}, topic-name: {}", natsPort, topicName);
+        logger.debug("NatsConfiguration loaded — port: {}", natsPort);
     }
 }
