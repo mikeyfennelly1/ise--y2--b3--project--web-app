@@ -1,3 +1,51 @@
 = Web Application (Queue consumer) for ISE year 2, block 3 project
 
+== Starting the application
 
+[source,bash]
+----
+./start.sh
+----
+
+`start.sh` waits for PostgreSQL to become available, then starts the Spring Boot application via `./gradlew bootRun`.
+Required environment variables (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `WEB_APP_PORT`) are sourced from a `.env` file in the parent directory.
+
+== Versioning
+
+This project uses https://semver.org[semantic versioning] (`MAJOR.MINOR.PATCH`).
+The current version is defined in `app/build.gradle`.
+
+== Architecture
+
+The application is a single Spring Boot service split into two subsystems.
+
+=== Consumer subsystem (`/api/consumer`)
+
+Manages a live subscription to a NATS message broker.
+Subscriptions are organised as a *hierarchical topic tree* — each node in the tree represents a subject, and children of a node represent sub-subjects (e.g. `device` → `device.sysinfo`).
+
+Users can modify the topic tree at runtime:
+
+* **Constructively** — add a new root subject or attach a child subject beneath an existing node.
+* **Destructively** — remove a subject (and its subtree) from the tree.
+
+All messages received on any subscribed topic are assumed to share the same payload format and are handled uniformly.
+Received messages are persisted to a PostgreSQL time-series table via the consumer repository.
+
+=== Reporting subsystem (`/api/reporting`)
+
+Reads from the persisted time-series data in PostgreSQL and exposes it for querying and reporting.
+
+== API documentation
+
+Swagger UI is available at:
+
+----
+http://localhost:<WEB_APP_PORT>/swagger-ui/index.html
+----
+
+The OpenAPI JSON spec is available at:
+
+----
+http://localhost:<WEB_APP_PORT>/v3/api-docs
+----
