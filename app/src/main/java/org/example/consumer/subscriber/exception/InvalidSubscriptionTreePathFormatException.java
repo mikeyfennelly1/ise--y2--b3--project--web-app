@@ -1,4 +1,4 @@
-package org.example.consumer.subscriber;
+package org.example.consumer.subscriber.exception;
 
 public class InvalidSubscriptionTreePathFormatException extends Exception {
 
