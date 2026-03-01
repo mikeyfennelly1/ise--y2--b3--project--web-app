@@ -39,8 +39,7 @@ public class SubscriptionSubsystemFacade implements SubscriptionManager {
 
     public List<SubscriptionNode> getChildSubscriptions(String parentPath) throws TreePathNotFoundException, InvalidSubscriptionTreePathFormatException {
         logger.debug("getChildSubscriptions - parentPath='{}'", parentPath);
-        SubscriptionNode parent = subscriptionTree.findNodeFromPath(parentPath);
-        List<SubscriptionNode> children = parent.getChildren();
+        List<SubscriptionNode> children = subscriptionTree.getChildrenOfNode(parentPath);
         logger.debug("getChildSubscriptions - found {} children", children.size());
         return children;
     }
