@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.consumer.model.Source;
+import org.example.consumer.model.Producer;
 
 import java.util.Map;
 
@@ -20,5 +20,5 @@ public class TimeSeriesMessageDTO {
     private Map<String, Double> values;
 
     @JsonProperty("source_properties")
-    private Source source;
+    private Producer producer;
 }

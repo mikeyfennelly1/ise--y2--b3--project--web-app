@@ -26,7 +26,7 @@ public class TimeSeriesRecord {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "source_id", nullable = false)
-    private Source source;
+    private Producer producer;
 
     @Column(name = "read_time", nullable = false)
     private Instant readTime;

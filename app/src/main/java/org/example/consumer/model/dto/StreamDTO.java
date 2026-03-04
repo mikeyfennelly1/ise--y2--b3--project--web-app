@@ -7,9 +7,9 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class SubjectDTO {
+public class StreamDTO {
     private Long id;
     private String name;
-    private List<SubjectDTO> children;
+    private List<StreamDTO> children;
     private List<SourceDTO> sources;
 }

@@ -1,4 +1,4 @@
-package org.example.consumer.subscriber.exception;
+package org.example.consumer.stream.exception;
 
 public class SubscriptionAlreadyExistsException extends Exception {
 

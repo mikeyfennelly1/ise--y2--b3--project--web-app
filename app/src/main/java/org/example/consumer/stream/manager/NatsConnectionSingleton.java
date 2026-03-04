@@ -1,4 +1,4 @@
-package org.example.consumer.subscriber.manager;
+package org.example.consumer.stream.manager;
 
 import io.nats.client.Connection;
 import io.nats.client.Nats;
@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.time.Duration;
 
 @Component
-public class NatsConnectionSingleton {
+class NatsConnectionSingleton {
     private final Logger logger = LoggerFactory.getLogger(NatsConnectionSingleton.class);
     private final int natsPort;
 

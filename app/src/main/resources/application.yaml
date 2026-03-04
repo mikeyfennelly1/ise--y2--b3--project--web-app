@@ -20,7 +20,7 @@ server:
 logging:
   level:
     root: INFO
-    org.example: DEBUG
+    org.example: TRACE
 
 springdoc:
   api-docs:

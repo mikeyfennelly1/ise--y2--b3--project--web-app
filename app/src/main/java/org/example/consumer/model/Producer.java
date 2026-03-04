@@ -9,17 +9,17 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "source")
-public class Source {
+@Table(name = "producer")
+public class Producer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "source_name", nullable = false)
+    @Column(name = "producer_name", nullable = false)
     private String sourceName;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "subject_id", nullable = false)
-    private Subject subject;
+    @JoinColumn(name = "stream_id", nullable = false)
+    private Stream stream;
 }

@@ -1,6 +1,6 @@
-package org.example.consumer.subscriber.utils;
+package org.example.consumer.stream.utils;
 
-import org.example.consumer.subscriber.exception.InvalidSubscriptionTreePathFormatException;
+import org.example.consumer.stream.exception.InvalidSubscriptionTreePathFormatException;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

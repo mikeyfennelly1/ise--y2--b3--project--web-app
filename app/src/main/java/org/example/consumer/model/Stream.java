@@ -11,8 +11,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "subject")
-public class Subject {
+@Table(name = "stream", uniqueConstraints = @UniqueConstraint(name = "uq_stream_name", columnNames = "name"))
+public class Stream {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,13 +21,6 @@ public class Subject {
     @Column(nullable = false)
     private String name;
 
-    @ManyToOne
-    @JoinColumn(name = "parent_id")
-    private Subject parent;
-
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Subject> children;
-
-    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Source> sources;
+    @OneToMany(mappedBy = "stream", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Producer> producers;
 }
