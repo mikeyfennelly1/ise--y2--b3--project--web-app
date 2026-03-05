@@ -19,6 +19,7 @@ import java.time.Duration;
 class NatsConnectionSingleton {
     private final Logger logger = LoggerFactory.getLogger(NatsConnectionSingleton.class);
     private final int natsPort;
+    private final String natsHost;
 
     @Getter
     private Connection connection;
@@ -26,6 +27,7 @@ class NatsConnectionSingleton {
     @Autowired
     NatsConnectionSingleton(NatsConfiguration cnf) {
         this.natsPort = cnf.getNatsPort();
+        this.natsHost = cnf.getNatsHost();
     }
 
     @PostConstruct
@@ -53,6 +55,6 @@ class NatsConnectionSingleton {
     }
 
     private String hostName() {
-        return String.format("nats://localhost:%d", natsPort);
+        return String.format("nats://%s:%d", natsHost, natsPort);
     }
 }

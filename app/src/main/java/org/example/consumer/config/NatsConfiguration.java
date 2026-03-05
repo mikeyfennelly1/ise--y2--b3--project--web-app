@@ -16,8 +16,12 @@ public class NatsConfiguration {
     @Value("${spring.nats.port}")
     private int natsPort;
 
+    @Getter
+    @Value("${spring.nats.host}")
+    private String natsHost;
+
     @PostConstruct
     void logConfig() {
-        logger.debug("NatsConfiguration loaded — port: {}", natsPort);
+        logger.debug("NatsConfiguration loaded — port={}, host={}", natsPort, natsHost);
     }
 }

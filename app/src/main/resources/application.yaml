@@ -2,10 +2,11 @@ spring:
   application:
     name: b3proj
   nats:
-    port: 4222
+    host: ${NATS_HOST:localhost}
+    port: ${NATS_PORT:4222}
     topic-name: desktop-sysinfo
   datasource:
-    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:postgres}
     username: ${POSTGRES_USER:user}
     password: ${POSTGRES_PASSWORD:password}
   jpa:
