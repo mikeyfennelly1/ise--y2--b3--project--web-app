@@ -12,3 +12,4 @@ plugins {
 
 rootProject.name = 'ise--y2--b3--project--web-app'
 include('app')
+

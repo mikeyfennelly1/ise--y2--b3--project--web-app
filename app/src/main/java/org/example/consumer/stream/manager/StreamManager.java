@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 public interface StreamManager {
     void createStream(String name, String parent) throws TreePathNotFoundException, InvalidSubscriptionTreePathFormatException, SubscriptionAlreadyExistsException;
     void restoreStream(String name, String parent) throws TreePathNotFoundException;
-    void deleteStream(String subscriptionName);
+    void deleteStream(String subscriptionName) throws TreePathNotFoundException;
     List<String> getAllStreamNames();
     List<String> getChildStreams(String parentPath) throws TreePathNotFoundException, InvalidSubscriptionTreePathFormatException;
     AutoCloseable subscribeToStream(String streamName, Consumer<byte[]> handler);

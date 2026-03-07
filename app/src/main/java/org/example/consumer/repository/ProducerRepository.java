@@ -10,4 +10,5 @@ import java.util.List;
 public interface ProducerRepository extends JpaRepository<Producer, Long> {
     List<Producer> findByStreamName(String streamName);
     List<Producer> findByStreamId(Long streamId);
+    Producer findBySourceName(String producerName);
 }

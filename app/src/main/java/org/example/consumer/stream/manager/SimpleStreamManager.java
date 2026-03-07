@@ -3,8 +3,10 @@ package org.example.consumer.stream.manager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nats.client.Connection;
 import io.nats.client.Dispatcher;
+import org.example.consumer.model.Producer;
 import org.example.consumer.model.TimeSeriesRecord;
-import org.example.consumer.model.dto.TimeSeriesMessageDTO;
+import org.example.libb3project.dto.TimeSeriesMessageDTO;
+import org.example.consumer.repository.ProducerRepository;
 import org.example.consumer.repository.StreamRepository;
 import org.example.consumer.repository.TimeseriesRepository;
 import org.example.consumer.stream.exception.InvalidSubscriptionTreePathFormatException;
@@ -28,13 +30,21 @@ class SimpleStreamManager implements StreamManager {
     private final Connection natsConnection;
     private final ObjectMapper objectMapper;
     private final TimeseriesRepository timeseriesRepository;
+    private final ProducerRepository producerRepository;
 
     @Autowired
-    SimpleStreamManager(StreamRepository streamRepository, NatsConnectionSingleton natsConnectionSingleton, ObjectMapper objectMapper, TimeseriesRepository timeseriesRepository) {
+    SimpleStreamManager(
+            StreamRepository streamRepository,
+            NatsConnectionSingleton natsConnectionSingleton,
+            ObjectMapper objectMapper,
+            ProducerRepository producerRepository,
+            TimeseriesRepository timeseriesRepository
+    ) {
         this.streamRepository = streamRepository;
         this.natsConnection = natsConnectionSingleton.getConnection();
         this.objectMapper = objectMapper;
         this.timeseriesRepository = timeseriesRepository;
+        this.producerRepository = producerRepository;
     }
 
     @Override
@@ -67,11 +77,11 @@ class SimpleStreamManager implements StreamManager {
     }
 
     @Override
-    public void deleteStream(String name) {
+    public void deleteStream(String name) throws TreePathNotFoundException {
         logger.debug("deleteStream - name='{}'", name);
         if (!streamRepository.streamExists(name)) {
-            logger.debug("deleteStream - stream '{}' not found, nothing to delete", name);
-            return;
+            logger.debug("deleteStream - stream '{}' not found, throwing TreePathNotFoundException", name);
+            throw new TreePathNotFoundException(name);
         }
         streamRepository.deleteAllDescendants(name);
         logger.debug("deleteStream - deleted all descendants of '{}'", name);
@@ -110,8 +120,10 @@ class SimpleStreamManager implements StreamManager {
                 TimeSeriesMessageDTO dto = objectMapper.readValue(message.getData(), TimeSeriesMessageDTO.class);
                 logger.debug("initDispatcher - stream '{}' received message {}", streamName, dto);
                 Instant readTime = Instant.ofEpochSecond(dto.getReadTime());
+                Producer producer = producerRepository.findBySourceName(dto.getProducerName());
+
                 for (Map.Entry<String, Double> entry : dto.getValues().entrySet()) {
-                    TimeSeriesRecord record = new TimeSeriesRecord(null, entry.getKey(), entry.getValue().floatValue(), dto.getProducer(), readTime);
+                    TimeSeriesRecord record = new TimeSeriesRecord(null, entry.getKey(), entry.getValue().floatValue(), producer, readTime);
                     timeseriesRepository.save(record);
                 }
             } catch (Exception e) {

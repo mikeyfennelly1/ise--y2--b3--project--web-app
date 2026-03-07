@@ -1,8 +1,8 @@
 package org.example.reporting.controller;
 
-import org.example.consumer.model.dto.ProducerDTO;
-import org.example.consumer.model.dto.StreamDTO;
-import org.example.consumer.model.dto.TimeSeriesRecordDTO;
+import org.example.libb3project.dto.ProducerDTO;
+import org.example.libb3project.dto.StreamDTO;
+import org.example.libb3project.dto.TimeSeriesRecordDTO;
 import org.example.reporting.service.ReportingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

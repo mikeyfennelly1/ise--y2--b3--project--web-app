@@ -28,7 +28,7 @@ public class StreamingSubsystemFacade {
         manager.createStream(name, parentFullName);
     }
 
-    public void removeStream(String subscriptionName) {
+    public void removeStream(String subscriptionName) throws TreePathNotFoundException {
         manager.deleteStream(subscriptionName);
     }
 

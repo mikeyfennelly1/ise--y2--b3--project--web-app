@@ -25,6 +25,7 @@ configurations {
 }
 
 repositories {
+	mavenLocal()
 	mavenCentral()
 }
 
@@ -45,6 +46,9 @@ dependencies {
 
 	// SWAGGER
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+
+	// LOCAL
+	implementation 'libb3project:lib:unspecified'
 
 	// UTILS
 	compileOnly 'org.projectlombok:lombok'

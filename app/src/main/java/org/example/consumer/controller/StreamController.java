@@ -73,6 +73,19 @@ public class StreamController {
         return body == null || !body.containsKey("name") || body.get("name") == null || body.get("name").isBlank();
     }
 
+    @DeleteMapping("/streams")
+    public ResponseEntity<?> deleteStream(@RequestParam String name) {
+        logger.debug("DELETE /api/consumer/streams - name='{}'", name);
+        try {
+            streamingSubsystemFacade.removeStream(name);
+        } catch (TreePathNotFoundException e) {
+            logger.debug("DELETE /api/consumer/streams - rejected: stream not found - {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
+        logger.debug("DELETE /api/consumer/streams - stream '{}' deleted successfully", name);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/streams/children")
     public ResponseEntity<?> getChildStreams(@RequestParam String stream) {
         logger.debug("GET /api/consumer/streams/children - parent='{}'", stream);
