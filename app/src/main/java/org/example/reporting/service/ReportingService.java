@@ -4,7 +4,6 @@ import org.example.consumer.model.Producer;
 import org.example.consumer.model.Stream;
 import org.example.consumer.model.TimeSeriesRecord;
 import org.example.libb3project.dto.ProducerDTO;
-import org.example.libb3project.dto.SourceDTO;
 import org.example.libb3project.dto.StreamDTO;
 import org.example.libb3project.dto.TimeSeriesRecordDTO;
 import org.example.consumer.repository.ProducerRepository;
@@ -15,10 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class ReportingService {
@@ -39,7 +35,7 @@ public class ReportingService {
     public List<StreamDTO> getAllStreams() {
         logger.debug("getAllStreams - querying repository");
         List<StreamDTO> streams = streamRepository.findAll().stream()
-                .map(this::toDTO)
+                .map(Stream::toDTO)
                 .toList();
         logger.debug("getAllStreams - returning {} stream(s)", streams.size());
         return streams;
@@ -53,11 +49,11 @@ public class ReportingService {
         // Build name -> StreamDTO map (children must be mutable for tree assembly)
         Map<String, StreamDTO> dtoMap = new LinkedHashMap<>();
         for (Stream stream : allStreams) {
-            List<SourceDTO> producers = stream.getProducers().stream()
-                    .map(p -> new SourceDTO(p.getId(), p.getSourceName()))
+            List<ProducerDTO> producers = stream.getProducers().stream()
+                    .map(Producer::toDTO)
                     .toList();
             logger.trace("getStreamHierarchy - mapped stream '{}' with {} producer(s)", stream.getName(), producers.size());
-            dtoMap.put(stream.getName(), new StreamDTO(stream.getId(), stream.getName(), new ArrayList<>(), producers));
+            dtoMap.put(stream.getName(), stream.toDTO());
         }
 
         // Attach each node to its parent; collect nodes with no parent as roots
@@ -89,7 +85,7 @@ public class ReportingService {
     public List<ProducerDTO> getAllProducers() {
         logger.debug("getAllProducers - querying repository");
         List<ProducerDTO> producers = producerRepository.findAll().stream()
-                .map(this::toDTO)
+                .map(Producer::toDTO)
                 .toList();
         logger.debug("getAllProducers - returning {} producer(s)", producers.size());
         return producers;
@@ -98,42 +94,35 @@ public class ReportingService {
     public List<ProducerDTO> getAllProducersForStream(String streamName) {
         logger.debug("getAllProducersForStream - querying for stream '{}'", streamName);
         List<ProducerDTO> producers = producerRepository.findByStreamName(streamName).stream()
-                .map(this::toDTO)
+                .map(Producer::toDTO)
                 .toList();
         logger.debug("getAllProducersForStream - returning {} producer(s) for stream '{}'", producers.size(), streamName);
         return producers;
     }
 
-    public List<ProducerDTO> getProducersByStreamId(Long streamId) {
+    public List<ProducerDTO> getProducersByStreamId(UUID streamId) {
         logger.debug("getProducersByStreamId - querying for streamId={}", streamId);
-        List<ProducerDTO> producers = producerRepository.findByStreamId(streamId).stream()
-                .map(this::toDTO)
+        List<ProducerDTO> producers = producerRepository.findByStreamUuid(streamId).stream()
+                .map(Producer::toDTO)
                 .toList();
         logger.debug("getProducersByStreamId - returning {} producer(s) for streamId={}", producers.size(), streamId);
         return producers;
     }
 
-    public List<TimeSeriesRecordDTO> getRecordsByStreamId(Long streamId) {
+    public String getStreamNameById(UUID streamId) {
+        logger.debug("getStreamNameById - querying for streamId={}", streamId);
+        return streamRepository.findById(streamId)
+                .map(Stream::getName)
+                .orElse(null);
+    }
+
+    public List<TimeSeriesRecordDTO> getRecordsByStreamId(UUID streamId) {
         logger.debug("getRecordsByStreamId - querying for streamId={}", streamId);
-        List<TimeSeriesRecordDTO> records = timeseriesRepository.findByProducerStreamId(streamId).stream()
-                .map(this::toDTO)
+        List<TimeSeriesRecordDTO> records = timeseriesRepository.findByProducerStreamUuid(streamId).stream()
+                .map(TimeSeriesRecord::toDTO)
                 .toList();
         logger.debug("getRecordsByStreamId - returning {} record(s) for streamId={}", records.size(), streamId);
         return records;
     }
 
-    private StreamDTO toDTO(Stream stream) {
-        List<SourceDTO> producers = stream.getProducers().stream()
-                .map(p -> new SourceDTO(p.getId(), p.getSourceName()))
-                .toList();
-        return new StreamDTO(stream.getId(), stream.getName(), List.of(), producers);
-    }
-
-    private TimeSeriesRecordDTO toDTO(TimeSeriesRecord record) {
-        return new TimeSeriesRecordDTO(record.getId(), record.getKey(), record.getValue(), record.getProducer().getSourceName(), record.getReadTime());
-    }
-
-    private ProducerDTO toDTO(Producer producer) {
-        return new ProducerDTO(producer.getId(), producer.getSourceName(), producer.getStream().getName());
-    }
 }

@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 @Component
@@ -72,7 +73,7 @@ class SimpleStreamManager implements StreamManager {
     }
 
     @Override
-    public void restoreStream(String name, String parent) throws TreePathNotFoundException {
+    public void restoreStream(String name, String parent) {
         initDispatcher(name);
     }
 
@@ -120,14 +121,24 @@ class SimpleStreamManager implements StreamManager {
                 TimeSeriesMessageDTO dto = objectMapper.readValue(message.getData(), TimeSeriesMessageDTO.class);
                 logger.debug("initDispatcher - stream '{}' received message {}", streamName, dto);
                 Instant readTime = Instant.ofEpochSecond(dto.getReadTime());
-                Producer producer = producerRepository.findBySourceName(dto.getProducerName());
+                Producer producer = producerRepository.findByName(dto.getProducerName());
+                if (producer == null) {
+
+                }
 
                 for (Map.Entry<String, Double> entry : dto.getValues().entrySet()) {
-                    TimeSeriesRecord record = new TimeSeriesRecord(null, entry.getKey(), entry.getValue().floatValue(), producer, readTime);
+                    TimeSeriesRecord record = TimeSeriesRecord.builder()
+                            .key(entry.getKey())
+                            .value(entry.getValue().floatValue())
+                            .producer(producer)
+                            .readTime(readTime)
+                            .id(UUID.randomUUID())
+                            .build();
                     timeseriesRepository.save(record);
                 }
             } catch (Exception e) {
                 logger.debug("initDispatcher - stream '{}' failed to parse message: {}", streamName, e.getMessage());
+
             }
         });
         dispatcher.subscribe(streamName);

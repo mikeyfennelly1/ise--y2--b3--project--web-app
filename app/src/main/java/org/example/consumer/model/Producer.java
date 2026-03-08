@@ -1,25 +1,38 @@
 package org.example.consumer.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.libb3project.dto.ProducerDTO;
+
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 @Entity
 @Table(name = "producer")
 public class Producer {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", nullable = false, updatable = false)
+    private UUID uuid;
 
-    @Column(name = "producer_name", nullable = false)
-    private String sourceName;
+    @Column(name = "name", nullable = false, unique = true)
+    private String name;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "stream_id", nullable = false)
     private Stream stream;
+
+    @JsonIgnore
+    public ProducerDTO toDTO() {
+        return new ProducerDTO(this.uuid, this.name);
+    }
 }

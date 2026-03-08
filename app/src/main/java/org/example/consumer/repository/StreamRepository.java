@@ -9,9 +9,10 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Repository
-public interface StreamRepository extends JpaRepository<Stream, Long> {
+public interface StreamRepository extends JpaRepository<Stream, UUID> {
 
     @Query("SELECT s FROM Stream s WHERE s.name LIKE CONCAT(:subjectName, '.%') AND s.name NOT LIKE CONCAT(:subjectName, '.%.%')")
     List<Stream> getChildren(@Param("subjectName") String subjectName);
@@ -20,8 +21,10 @@ public interface StreamRepository extends JpaRepository<Stream, Long> {
     boolean streamExists(@Param("streamName") String streamName);
 
     default Stream newStream(String name) {
-        return save(new Stream(null, name, new java.util.ArrayList<>()));
+        return save(Stream.builder().name(name).producers(new java.util.ArrayList<>()).build());
     }
+
+    Stream findByName(String name);
 
     @Transactional
     void deleteByName(String name);
