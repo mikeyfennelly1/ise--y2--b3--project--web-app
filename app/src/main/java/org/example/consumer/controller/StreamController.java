@@ -1,10 +1,11 @@
 package org.example.consumer.controller;
 
-import org.example.consumer.stream.exception.InvalidSubscriptionTreePathFormatException;
+import org.example.consumer.stream.exception.InvalidStreamNameException;
 import org.example.consumer.stream.exception.StreamAlreadyExistsException;
-import org.example.consumer.stream.exception.TreePathNotFoundException;
+import org.example.consumer.stream.exception.StreamNotFoundException;
 import org.example.consumer.stream.manager.StreamManager;
 import org.example.consumer.stream.manager.StreamManagerFactory;
+import org.example.libb3project.dto.TimeSeriesRecordDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 import java.util.Map;
@@ -57,10 +59,10 @@ public class StreamController {
         String streamParentName = body.get("parent");
         try {
             streamManager.createStream(streamName, streamParentName);
-        } catch (InvalidSubscriptionTreePathFormatException e) {
+        } catch (InvalidStreamNameException e) {
             logger.debug("POST /api/consumer/streams - rejected: invalid path format - {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        } catch (TreePathNotFoundException e) {
+        } catch (StreamNotFoundException e) {
             logger.debug("POST /api/consumer/streams - rejected: parent path not found - {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (StreamAlreadyExistsException e) {
@@ -80,7 +82,7 @@ public class StreamController {
         logger.debug("DELETE /api/consumer/streams - name='{}'", name);
         try {
             streamManager.deleteStream(name);
-        } catch (TreePathNotFoundException e) {
+        } catch (StreamNotFoundException e) {
             logger.debug("DELETE /api/consumer/streams - rejected: stream not found - {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         }
@@ -95,7 +97,7 @@ public class StreamController {
             logger.debug("GET /api/consumer/streams/events - rejected: stream '{}' not found", stream);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Stream '" + stream + "' not found."));
         }
-
+        Flux<TimeSeriesRecordDTO> flux = streamManager.getStreamSSESink(stream);
         return ResponseEntity.ok(flux);
     }
 
@@ -105,10 +107,10 @@ public class StreamController {
         try {
             List<String> childSubscriptions = streamManager.getChildStreams(stream);
             return ResponseEntity.ok(childSubscriptions);
-        } catch (InvalidSubscriptionTreePathFormatException e) {
+        } catch (InvalidStreamNameException e) {
             logger.debug("GET /api/consumer/streams/children - rejected: invalid path format - {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        } catch (TreePathNotFoundException e) {
+        } catch (StreamNotFoundException e) {
             logger.debug("GET /api/consumer/streams/children - rejected: parent path not found - {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         }
