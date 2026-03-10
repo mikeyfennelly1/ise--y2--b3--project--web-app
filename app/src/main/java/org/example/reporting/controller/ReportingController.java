@@ -92,35 +92,7 @@ public class ReportingController {
             return emitter;
         }
 
-        Flux<ServerSentEvent<String>> subscription = streamManager.subscribeToStreamSSESink(streamName, bytes -> {
-            try {
-                TimeSeriesMessageDTO msg = objectMapper.readValue(bytes, TimeSeriesMessageDTO.class);
-                Instant readTime = Instant.ofEpochSecond(msg.getReadTime());
-                List<TimeSeriesRecordDTO> liveRecords = msg.getValues().entrySet().stream()
-                        .map(e -> new TimeSeriesRecordDTO(null, e.getKey(), e.getValue().floatValue(), msg.getProducerName(), readTime))
-                        .toList();
-                logger.trace("GET /api/reporting/streams/{} - pushing {} live record(s)", streamId, liveRecords.size());
-                synchronized (emitter) {
-                    emitter.send(SseEmitter.event().name("live").data(liveRecords, MediaType.APPLICATION_JSON));
-                }
-            } catch (Exception e) {
-                logger.error("GET /api/reporting/streams/{} - error pushing live event: {}", streamId, e.getMessage());
-            }
-        });
-
-        emitter.onCompletion(() -> {
-            logger.debug("GET /api/reporting/streams/{} - SSE completed, unsubscribing", streamId);
-            try { subscription.close(); } catch (Exception ignored) {}
-        });
-        emitter.onTimeout(() -> {
-            logger.debug("GET /api/reporting/streams/{} - SSE timed out, unsubscribing", streamId);
-            try { subscription.close(); } catch (Exception ignored) {}
-            emitter.complete();
-        });
-        emitter.onError(e -> {
-            logger.debug("GET /api/reporting/streams/{} - SSE error, unsubscribing: {}", streamId, e.getMessage());
-            try { subscription.close(); } catch (Exception ignored) {}
-        });
+        Flux<ServerSentEvent<String>> subscription = streamManager.subscribeToStreamSSESink(streamName);
 
         logger.debug("GET /api/reporting/streams/{} - SSE stream open, subscribed to NATS subject '{}'", streamId, streamName);
         return emitter;
