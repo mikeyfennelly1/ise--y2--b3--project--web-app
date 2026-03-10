@@ -1,3 +1,11 @@
+# [2.3.0](https://github.com/mikeyfennelly1/ise--y2--b3--project--web-app/compare/v1.0.0...v1.1.0) (2026-02-23)
+
+
+### Features
+* POST /api/consumer/commands endpoint for sending device commands [09603ad](https://github.com/mikeyfennelly1/ise--y2--b3--project--web-app/commit/09603ad7bdfc2a8f58b88d87c4ac163aa3ee9d54)
+* DeviceCommandService [a169dbf](https://github.com/mikeyfennelly1/ise--y2--b3--project--web-app/commit/19c3f991d4de57931bc4336a6ff5601af3f5e1e9)
+* FirebaseConfiguration [a169dbf](https://github.com/mikeyfennelly1/ise--y2--b3--project--web-app/commit/a169dbfd6a14a16bc9e060ea6145c9201b3d48df)
+
 # [1.1.0](https://github.com/mikeyfennelly1/ise--y2--b3--project--web-app/compare/v1.0.0...v1.1.0) (2026-02-23)
 
 
