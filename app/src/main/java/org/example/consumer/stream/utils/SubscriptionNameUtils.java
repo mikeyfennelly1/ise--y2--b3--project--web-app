@@ -1,11 +1,9 @@
 package org.example.consumer.stream.utils;
 
 import org.example.consumer.stream.exception.InvalidSubscriptionTreePathFormatException;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Component
 public class SubscriptionNameUtils {
     public NameBuilder builder(String rootName) {
         return new NameBuilder(rootName);
@@ -42,5 +40,14 @@ public class SubscriptionNameUtils {
         } else {
             return List.of(subject);
         }
+    }
+
+
+    public static String getParentStreamName(String name) {
+        return name.substring(0, name.indexOf('.'));
+    }
+
+    public static boolean isRootStreamName(String name) {
+        return !name.contains(".");
     }
 }

@@ -1,5 +1,6 @@
 package org.example.consumer.stream.manager;
 
+import io.nats.client.Connection;
 import io.nats.client.MessageHandler;
 import org.example.consumer.stream.exception.StreamAlreadyExistsException;
 import org.example.consumer.repository.StreamRepository;
@@ -16,6 +17,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.example.consumer.stream.utils.SubscriptionNameUtils.getParentStreamName;
+import static org.example.consumer.stream.utils.SubscriptionNameUtils.isRootStreamName;
+
 /**
  * {@code SimpleStreamManager} manages time series data streams.
  * Specifically:
@@ -30,14 +34,18 @@ class SimpleStreamManager implements StreamManager {
     private final StreamRepository streamRepository;
     private final DispatcherService dispatcherService;
     private final Map<String, Flux<ServerSentEvent<String>>> streamMap = new HashMap<>();
+    private final Connection natsConnection;
+    private TransactionalStreamCache transactionalStreamCache = new TransactionalStreamCache();
 
     @Autowired
     SimpleStreamManager(
             DispatcherService dispatcherService,
-            StreamRepository streamRepository
+            StreamRepository streamRepository,
+            NatsConnectionSingleton natsConnSingleton
     ) {
         this.dispatcherService = dispatcherService;
         this.streamRepository = streamRepository;
+        this.natsConnection = natsConnSingleton.getConnection();
     }
 
     @Override
@@ -62,13 +70,15 @@ class SimpleStreamManager implements StreamManager {
         logger.debug("recording new stream name in database: name={}", name);
         streamRepository.newStream(name);
         logger.debug("initializing dispatcher for stream: {}", name);
-        initDispatcher(name);
+        transactionalStreamCache.initDispatcher(name, natsConnection);
         logger.info("createStream - stream '{}' created successfully", name);
     }
 
     @Override
     public void restoreStream(String name, String parent) {
-        initDispatcher(name);
+        // initialize flux stream
+        // initialize dispatcher, pass flux stream to it so that it can write to that
+        this.transactionalStreamCache.initDispatcher(name, natsConnection);
     }
 
     @Override
@@ -108,28 +118,26 @@ class SimpleStreamManager implements StreamManager {
         return children;
     }
 
-    void initDispatcher(String streamName) {
-        logger.debug("initDispatcher - initializing NATS dispatcher for stream '{}'", streamName);
-        MessageHandler handler = dispatcherService.newDispatcher("default");
-        logger.debug("initDispatcher - NATS dispatcher initialized for stream '{}'", streamName);
-    }
-
-    String getParentStreamName(String name) {
-        return name.substring(0, name.indexOf('.'));
-    }
-
-    boolean isRootStreamName(String name) {
-        return !name.contains(".");
-    }
-
     @Override
     public Flux<ServerSentEvent<String>> subscribeToStreamSSESink(String streamName) {
         logger.debug("subscribeToStream - creating live NATS subscription for stream '{}'", streamName);
-        return flux;
+        return this.transactionalStreamCache.getSSESinkForStream(streamName);
     }
 
     @Override
     public boolean streamAlreadyExists(String streamName) {
         return this.streamRepository.streamExists(streamName);
+    }
+
+    private class TransactionalStreamCache {
+        void initDispatcher(String streamName, Connection natsConnection) {
+            logger.debug("initDispatcher - initializing NATS dispatcher for stream '{}'", streamName);
+            MessageHandler handler = dispatcherService.newDispatcher("default", natsConnection);
+            logger.debug("initDispatcher - NATS dispatcher initialized for stream '{}'", streamName);
+        }
+
+        Flux<ServerSentEvent<String>> getSSESinkForStream(String streamName) {
+            throw new UnsupportedOperationException();
+        }
     }
 }
