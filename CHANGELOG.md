@@ -1,4 +1,12 @@
-# [2.3.0](https://github.com/mikeyfennelly1/ise--y2--b3--project--web-app/compare/v1.0.0...v1.1.0) (2026-02-23)
+# [2.4.0](https://github.com/mikeyfennelly1/ise--y2--b3--project--web-app/compare/v2.3.0...v2.4.0) (2026-03-10)
+
+
+### Features
+* ManagedStream
+* SimpleStreamManager restores streams rather than StreamManagerFactory
+* TimeSeriesStreamHandler - receives message & writes to Webflux Flux reactive pipeline
+
+# [2.3.0](https://github.com/mikeyfennelly1/ise--y2--b3--project--web-app/compare/v1.0.0...v1.1.0) (2026-03-10)
 
 
 ### Features
