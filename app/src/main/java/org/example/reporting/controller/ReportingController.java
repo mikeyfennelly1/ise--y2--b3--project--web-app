@@ -1,28 +1,18 @@
 package org.example.reporting.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.consumer.stream.manager.StreamManager;
 import org.example.libb3project.dto.ProducerDTO;
 import org.example.libb3project.dto.StreamDTO;
-import org.example.libb3project.dto.TimeSeriesMessageDTO;
-import org.example.libb3project.dto.TimeSeriesRecordDTO;
 import org.example.reporting.service.ReportingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import reactor.core.publisher.Flux;
 
-import java.io.IOException;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -34,14 +24,10 @@ public class ReportingController {
     private static final Logger logger = LoggerFactory.getLogger(ReportingController.class);
 
     private final ReportingService reportingService;
-    private final StreamManager streamManager;
-    private final ObjectMapper objectMapper;
 
     @Autowired
-    public ReportingController(ReportingService reportingService, StreamManager streamManager, ObjectMapper objectMapper) {
+    public ReportingController(ReportingService reportingService) {
         this.reportingService = reportingService;
-        this.streamManager = streamManager;
-        this.objectMapper = objectMapper;
     }
 
     @GetMapping("/health")
@@ -66,36 +52,6 @@ public class ReportingController {
         logger.debug("GET /api/reporting/streams - returning {} root stream(s)", hierarchy.size());
         logger.trace("GET /api/reporting/streams - payload: {}", hierarchy);
         return ResponseEntity.ok(hierarchy);
-    }
-
-    @GetMapping(value = "/streams/{streamId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter streamRecordsByStreamId(@PathVariable UUID streamId) {
-        logger.debug("GET /api/reporting/streams/{} - opening SSE stream", streamId);
-        SseEmitter emitter = new SseEmitter(0L);
-
-        // Send historical records as the first event
-        List<TimeSeriesRecordDTO> history = reportingService.getRecordsByStreamId(streamId);
-        logger.debug("GET /api/reporting/streams/{} - sending {} historical record(s)", streamId, history.size());
-        try {
-            emitter.send(SseEmitter.event().name("history").data(history, MediaType.APPLICATION_JSON));
-        } catch (IOException e) {
-            logger.error("GET /api/reporting/streams/{} - failed to send historical data: {}", streamId, e.getMessage());
-            emitter.completeWithError(e);
-            return emitter;
-        }
-
-        // Resolve NATS subject (stream name) and subscribe for live events
-        String streamName = reportingService.getStreamNameById(streamId);
-        if (streamName == null) {
-            logger.warn("GET /api/reporting/streams/{} - stream not found, closing SSE", streamId);
-            emitter.complete();
-            return emitter;
-        }
-
-        Flux<ServerSentEvent<String>> subscription = streamManager.subscribeToStreamSSESink(streamName);
-
-        logger.debug("GET /api/reporting/streams/{} - SSE stream open, subscribed to NATS subject '{}'", streamId, streamName);
-        return emitter;
     }
 
     @GetMapping("/producers")
