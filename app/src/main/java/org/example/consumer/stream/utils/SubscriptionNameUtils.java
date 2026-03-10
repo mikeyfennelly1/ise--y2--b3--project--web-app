@@ -1,6 +1,6 @@
 package org.example.consumer.stream.utils;
 
-import org.example.consumer.stream.exception.InvalidSubscriptionTreePathFormatException;
+import org.example.consumer.stream.exception.InvalidStreamNameException;
 
 import java.util.List;
 
@@ -16,8 +16,8 @@ public class SubscriptionNameUtils {
             this.fullName = new StringBuilder().append(rootName);
         }
 
-        public void addName(String name) throws InvalidSubscriptionTreePathFormatException {
-            InvalidSubscriptionTreePathFormatException.validate(name);
+        public void addName(String name) throws InvalidStreamNameException {
+            InvalidStreamNameException.validate(name);
             fullName.append(".").append(name);
         }
 
@@ -31,10 +31,10 @@ public class SubscriptionNameUtils {
      * e.g. "device.sysinfo" → ["device", "sysinfo"], "device" → ["device"]
      *
      * @return an unmodifiable, order-preserving sequence of the subject's tokens.
-     * @throws InvalidSubscriptionTreePathFormatException if the subject is not a valid format.
+     * @throws InvalidStreamNameException if the subject is not a valid format.
      */
-    public static List<String> listOfSubjectsFromTreePath(String subject) throws InvalidSubscriptionTreePathFormatException {
-        InvalidSubscriptionTreePathFormatException.validate(subject);
+    public static List<String> listOfSubjectsFromTreePath(String subject) throws InvalidStreamNameException {
+        InvalidStreamNameException.validate(subject);
         if (subject.contains(".")) {
             return List.of(subject.split("\\."));
         } else {

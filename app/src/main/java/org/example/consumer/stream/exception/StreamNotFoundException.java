@@ -1,10 +1,10 @@
 package org.example.consumer.stream.exception;
 
-public class TreePathNotFoundException extends Exception {
+public class StreamNotFoundException extends Exception {
 
     private final String path;
 
-    public TreePathNotFoundException(String path) {
+    public StreamNotFoundException(String path) {
         super("Subscription tree path not found: " + path);
         this.path = path;
     }

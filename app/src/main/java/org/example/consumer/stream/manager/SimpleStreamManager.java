@@ -4,8 +4,8 @@ import io.nats.client.Connection;
 import io.nats.client.MessageHandler;
 import org.example.consumer.stream.exception.StreamAlreadyExistsException;
 import org.example.consumer.repository.StreamRepository;
-import org.example.consumer.stream.exception.InvalidSubscriptionTreePathFormatException;
-import org.example.consumer.stream.exception.TreePathNotFoundException;
+import org.example.consumer.stream.exception.InvalidStreamNameException;
+import org.example.consumer.stream.exception.StreamNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,11 +49,11 @@ class SimpleStreamManager implements StreamManager {
     }
 
     @Override
-    public void createStream(String name, String parent) throws TreePathNotFoundException, InvalidSubscriptionTreePathFormatException, StreamAlreadyExistsException {
+    public void createStream(String name, String parent) throws InvalidStreamNameException, StreamNotFoundException, StreamAlreadyExistsException {
         logger.debug("createStream - name='{}'", name);
 
         // validate that it is in the format '<stream_name>' or '<stream_name>.<child_stream_name>'
-        InvalidSubscriptionTreePathFormatException.validate(name);
+        InvalidStreamNameException.validate(name);
         if (streamAlreadyExists(name)) {
             throw new StreamAlreadyExistsException(name);
         }
@@ -63,7 +63,7 @@ class SimpleStreamManager implements StreamManager {
             logger.debug("createStream - checking parent stream exists: '{}'", parentStreamName);
             if (!streamRepository.streamExists(parentStreamName)) {
                 logger.debug("createStream - parent stream '{}' not found, throwing TreePathNotFoundException", parentStreamName);
-                throw new TreePathNotFoundException(parentStreamName);
+                throw new StreamNotFoundException(parentStreamName);
             }
         }
 
@@ -82,11 +82,11 @@ class SimpleStreamManager implements StreamManager {
     }
 
     @Override
-    public void deleteStream(String name) throws TreePathNotFoundException {
+    public void deleteStream(String name) throws StreamNotFoundException {
         logger.debug("deleteStream - name='{}'", name);
         if (!streamRepository.streamExists(name)) {
             logger.debug("deleteStream - stream '{}' not found, throwing TreePathNotFoundException", name);
-            throw new TreePathNotFoundException(name);
+            throw new StreamNotFoundException(name);
         }
         streamRepository.deleteAllDescendants(name);
         logger.debug("deleteStream - deleted all descendants of '{}'", name);
@@ -105,11 +105,11 @@ class SimpleStreamManager implements StreamManager {
     }
 
     @Override
-    public List<String> getChildStreams(String parentPath) throws TreePathNotFoundException, InvalidSubscriptionTreePathFormatException {
+    public List<String> getChildStreams(String parentPath) throws InvalidStreamNameException, StreamNotFoundException {
         logger.debug("getChildStreams - parentPath='{}'", parentPath);
         if (!streamRepository.streamExists(parentPath)) {
             logger.debug("getChildStreams - stream '{}' not found, throwing TreePathNotFoundException", parentPath);
-            throw new TreePathNotFoundException(parentPath);
+            throw new StreamNotFoundException(parentPath);
         }
         List<String> children = streamRepository.getChildren(parentPath).stream()
                 .map(stream -> stream.getName())

@@ -1,10 +1,10 @@
 package org.example.consumer.stream.exception;
 
-public class InvalidSubscriptionTreePathFormatException extends Exception {
+public class InvalidStreamNameException extends Exception {
 
     private final String invalidPath;
 
-    public InvalidSubscriptionTreePathFormatException(String invalidPath) {
+    public InvalidStreamNameException(String invalidPath) {
         super("Invalid subscription tree path: \"" + invalidPath + "\". "
                 + "Paths must be non-empty tokens separated by dots (e.g. \"device\" or \"device.sysinfo\"). "
                 + "Null, blank, leading/trailing dots, and consecutive dots are not allowed.");
@@ -21,16 +21,16 @@ public class InvalidSubscriptionTreePathFormatException extends Exception {
      * Each token must be non-empty. Null, blank, leading/trailing dots,
      * and consecutive dots are not allowed.
      *
-     * @throws InvalidSubscriptionTreePathFormatException if the path is invalid.
+     * @throws InvalidStreamNameException if the path is invalid.
      */
-    public static void validate(String path) throws InvalidSubscriptionTreePathFormatException {
+    public static void validate(String path) throws InvalidStreamNameException {
         if (path == null || path.isBlank()) {
-            throw new InvalidSubscriptionTreePathFormatException(path);
+            throw new InvalidStreamNameException(path);
         }
         String[] parts = path.split("\\.", -1);
         for (String part : parts) {
             if (part.isEmpty()) {
-                throw new InvalidSubscriptionTreePathFormatException(path);
+                throw new InvalidStreamNameException(path);
             }
         }
     }
