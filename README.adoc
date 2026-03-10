@@ -42,6 +42,15 @@ Received messages are persisted to a PostgreSQL time-series table via the consum
 
 Reads from the persisted time-series data in PostgreSQL and exposes it for querying and reporting.
 
+== Streaming subsystem — state diagram
+
+The diagram below shows the stream lifecycle and per-message handling flow.
+
+[plantuml, docs/streaming-subsystem, svg]
+....
+include::docs/streaming-subsystem.puml[]
+....
+
 == API documentation
 
 Swagger UI is available at:

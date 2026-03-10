@@ -1,0 +1,43 @@
+@startuml streaming-subsystem
+title Streaming Subsystem — Stream Lifecycle & Message Handling
+
+' ── Stream lifecycle ──────────────────────────────────────────────
+state "Stream Lifecycle" as lifecycle {
+    [*] --> Validating : createStream(name, parent)
+
+    Validating --> Error_InvalidFormat   : invalid name format
+    Validating --> Error_AlreadyExists   : stream already exists
+    Validating --> Error_ParentNotFound  : parent not in DB (child streams)
+    Validating --> Persisting            : valid
+
+    Persisting --> Active : saved to DB\n+ NATS dispatcher initialised
+
+    Active --> Active       : messages received
+    Active --> Deleted      : deleteStream(name)
+
+    Deleted --> [*]
+
+    Error_InvalidFormat  --> [*]
+    Error_AlreadyExists  --> [*]
+    Error_ParentNotFound --> [*]
+}
+
+' ── Message handling (inside Active state) ────────────────────────
+state Active {
+    [*] --> ReceivingMessage
+
+    ReceivingMessage --> ParsingMessage   : NATS message arrives
+
+    ParsingMessage --> LookingUpProducer  : JSON → TimeSeriesMessageDTO
+    ParsingMessage --> DeadLetterQueue    : parse error
+
+    LookingUpProducer --> PersistingRecord : producer found
+    LookingUpProducer --> DeadLetterQueue  : producer null / not found
+
+    PersistingRecord --> Acknowledged  : record saved to timeseries table
+    DeadLetterQueue  --> Acknowledged  : forwarded to _DLQ.<subject>
+
+    Acknowledged --> ReceivingMessage : ready for next message
+}
+
+@enduml

@@ -1,5 +1,6 @@
 package org.example.consumer.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import org.example.consumer.model.Producer;
 import org.example.consumer.model.Stream;
 import org.example.consumer.repository.ProducerRepository;
@@ -28,6 +29,7 @@ public class ProducerController {
         this.streamRepository = streamRepository;
     }
 
+    @Operation(summary = "Create a producer", description = "Registers a new named producer and associates it with an existing stream. Requires 'name' and 'streamName' fields.")
     @PostMapping("/producers")
     public ResponseEntity<?> createProducer(@RequestBody(required = false) Map<String, String> body) {
         logger.debug("POST /api/consumer/producers - body: {}", body);

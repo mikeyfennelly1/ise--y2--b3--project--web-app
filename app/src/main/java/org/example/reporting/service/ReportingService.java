@@ -84,6 +84,11 @@ public class ReportingService {
         return producers;
     }
 
+    public Optional<ProducerDTO> getProducerByName(String name) {
+        logger.debug("getProducerByName - querying for name='{}'", name);
+        return Optional.ofNullable(producerRepository.findByName(name)).map(Producer::toDTO);
+    }
+
     public Optional<StreamDTO> getStreamByName(String name) {
         logger.debug("getStreamByName - querying for name='{}'", name);
         return Optional.ofNullable(streamRepository.findByName(name)).map(Stream::toDTO);

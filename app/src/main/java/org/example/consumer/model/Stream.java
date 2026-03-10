@@ -27,7 +27,6 @@ public class Stream {
     @Column(name = "id", nullable = false, updatable = false)
     private UUID uuid;
 
-
     @Column(nullable = false)
     private String name;
 

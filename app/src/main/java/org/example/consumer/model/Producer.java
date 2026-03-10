@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.libb3project.dto.ProducerDTO;
 
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -31,8 +32,11 @@ public class Producer {
     @JoinColumn(name = "stream_id", nullable = false)
     private Stream stream;
 
+    @OneToMany(mappedBy = "producer", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<TimeSeriesRecord> timeSeriesRecords;
+
     @JsonIgnore
     public ProducerDTO toDTO() {
-        return new ProducerDTO(this.uuid, this.name);
+        return new ProducerDTO(this.uuid, this.name, this.stream.getName());
     }
 }
