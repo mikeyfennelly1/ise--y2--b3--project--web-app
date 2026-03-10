@@ -1,5 +1,6 @@
 package org.example.reporting.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import org.example.libb3project.dto.ProducerDTO;
 import org.example.libb3project.dto.StreamDTO;
 import org.example.reporting.service.ReportingService;
@@ -30,12 +31,14 @@ public class ReportingController {
         this.reportingService = reportingService;
     }
 
+    @Operation(summary = "Health check", description = "Returns a status message confirming the reporting API is running.")
     @GetMapping("/health")
     public ResponseEntity<Map<String, String>> health() {
         logger.debug("GET /api/reporting/health - hit health endpoint");
         return ResponseEntity.ok(Map.of("msg", "reporting API is healthy"));
     }
 
+    @Operation(summary = "Get streams", description = "Returns all streams as a hierarchy. If the optional 'name' query param is provided, returns the single matching stream instead.")
     @GetMapping("/streams")
     public ResponseEntity<?> getStreams(@RequestParam(required = false) String name) {
         if (name != null) {
@@ -54,6 +57,7 @@ public class ReportingController {
         return ResponseEntity.ok(hierarchy);
     }
 
+    @Operation(summary = "Get producers", description = "Returns all producers. If the optional 'name' query param is provided, returns the single matching producer instead.")
     @GetMapping("/producers")
     public ResponseEntity<?> getProducers(@RequestParam(required = false) String name) {
         if (name != null) {
@@ -71,6 +75,7 @@ public class ReportingController {
         return ResponseEntity.ok(producers);
     }
 
+    @Operation(summary = "Get producers by stream", description = "Returns all producers associated with the given stream ID.")
     @GetMapping("/streams/{streamId}/producers")
     public ResponseEntity<List<ProducerDTO>> getProducersByStreamId(@PathVariable UUID streamId) {
         logger.debug("GET /api/reporting/streams/{}/producers - fetching producers", streamId);

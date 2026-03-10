@@ -1,11 +1,12 @@
 package org.example.consumer.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import org.example.consumer.stream.exception.InvalidStreamNameException;
 import org.example.consumer.stream.exception.StreamAlreadyExistsException;
 import org.example.consumer.stream.exception.StreamNotFoundException;
 import org.example.consumer.stream.manager.StreamManager;
 import org.example.consumer.stream.manager.StreamManagerFactory;
-import org.example.libb3project.dto.TimeSeriesRecordDTO;
+import org.example.libb3project.dto.TimeSeriesMessageDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -34,18 +36,21 @@ public class StreamController {
         this.streamManager = managerFactory.getManager("simple");
     }
 
+    @Operation(summary = "Health check", description = "Returns a status message confirming the consumer API is running.")
     @GetMapping("/health")
     public ResponseEntity<Map<String, String>> health() {
         logger.debug("GET /api/consumer/health - hit health endpoint");
         return ResponseEntity.ok(Map.of("msg", "consumer API is healthy"));
     }
 
+    @Operation(summary = "List all streams", description = "Returns a list of all active stream names.")
     @GetMapping("/streams")
     public List<String> getAllStreams() {
         logger.debug("GET /api/consumer/streams - fetching active subscriptions");
         return streamManager.getAllStreamNames();
     }
 
+    @Operation(summary = "Create a stream", description = "Creates a new named stream. Requires a 'name' field and a 'parent' field (set parent to null for a root stream).")
     @PostMapping("/streams")
     public ResponseEntity<ErrorResponse> createNewStream(@RequestBody(required = false) Map<String, String> body) {
         logger.debug("POST /api/consumer/streams - body: {}", body);
@@ -79,6 +84,7 @@ public class StreamController {
         return body == null || !body.containsKey("name") || body.get("name") == null || body.get("name").isBlank();
     }
 
+    @Operation(summary = "Delete a stream", description = "Deletes the stream with the given name.")
     @DeleteMapping("/streams")
     public ResponseEntity<ErrorResponse> deleteStream(@RequestParam String name) {
         logger.debug("DELETE /api/consumer/streams - name='{}'", name);
@@ -92,17 +98,18 @@ public class StreamController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Subscribe to stream events", description = "Opens a Server-Sent Events connection and streams time-series records for the given stream.")
     @GetMapping(value = "/streams/events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public ResponseEntity<?> subscribeToStreamEvents(@RequestParam String stream) {
+    public Flux<TimeSeriesMessageDTO> subscribeToStreamEvents(@RequestParam String stream) {
         logger.debug("GET /api/consumer/streams/events - stream='{}'", stream);
         if (!streamManager.streamAlreadyExists(stream)) {
             logger.debug("GET /api/consumer/streams/events - rejected: stream '{}' not found", stream);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Stream '" + stream + "' not found."));
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Stream '" + stream + "' not found.");
         }
-        Flux<TimeSeriesRecordDTO> flux = streamManager.getStreamSSESink(stream);
-        return ResponseEntity.ok(flux);
+        return streamManager.getStreamSSESink(stream);
     }
 
+    @Operation(summary = "Get child streams", description = "Returns a list of direct child stream names for the given parent stream.")
     @GetMapping("/streams/children")
     public ResponseEntity<?> getChildStreams(@RequestParam String stream) {
         logger.debug("GET /api/consumer/streams/children - parent='{}'", stream);

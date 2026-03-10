@@ -3,7 +3,6 @@ package org.example.consumer.stream.manager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nats.client.Message;
 import io.nats.client.MessageHandler;
-import lombok.AllArgsConstructor;
 import org.example.consumer.model.Producer;
 import org.example.consumer.model.TimeSeriesRecord;
 import org.example.consumer.repository.ProducerRepository;
@@ -12,6 +11,8 @@ import org.example.libb3project.dto.TimeSeriesMessageDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -19,17 +20,33 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
 
-@AllArgsConstructor
 @Component
-class DefaultDispatchMessageHandler implements MessageHandler {
-    private static final Logger logger = LoggerFactory.getLogger(DefaultDispatchMessageHandler.class);
+class TimeSeriesStreamHandler implements MessageHandler {
+    private static final Logger logger = LoggerFactory.getLogger(TimeSeriesStreamHandler.class);
     private static final String DLQ_SUBJECT_PREFIX = "_DLQ.";
 
     private final ObjectMapper objectMapper;
     private final TimeseriesRepository timeseriesRepository;
     private final ProducerRepository producerRepository;
     private final NatsConnectionSingleton nats;
+
+    private Sinks.Many<TimeSeriesMessageDTO> sink;
+    private Flux<TimeSeriesMessageDTO> flux;
+
+    TimeSeriesStreamHandler(
+            ObjectMapper objectMapper,
+            TimeseriesRepository timeseriesRepository,
+            ProducerRepository producerRepository,
+            NatsConnectionSingleton nats
+    ) {
+        this.objectMapper = objectMapper;
+        this.timeseriesRepository = timeseriesRepository;
+        this.producerRepository = producerRepository;
+        this.nats = nats;
+    }
 
     @Override
     public void onMessage(Message message) throws InterruptedException {
@@ -38,16 +55,38 @@ class DefaultDispatchMessageHandler implements MessageHandler {
             TimeSeriesMessageDTO dto = readToDto(message);
             Producer producer = getProducerByName(dto.getProducerName());
             List<TimeSeriesRecord> recordList = splitIntoRecordList(dto, producer);
+            saveAllRecords(recordList);
+            writeDTOToFlux(dto);
             ackMessage();
         } catch (Exception e) {
-            logger.error("unrecoverable error while processing message");
+            logger.error("unrecoverable error while processing message: {}", e.getMessage());
             sendToDeadLetterQueue(message);
             ackMessage();
         }
     }
 
-    private void writeDTOToFlux() {
+    private void saveAllRecords(List<TimeSeriesRecord> recordList) throws InterruptedException {
+        int n = recordList.size();
+        logger.debug("submitting {} restore task(s) to virtual thread executor", n);
+        CountDownLatch latch = new CountDownLatch(n);
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            for (TimeSeriesRecord record : recordList) {
+                executor.submit(() -> {
+                    timeseriesRepository.save(record);
+                    latch.countDown();
+                });
+            }
+        }
+        logger.debug("waiting for all restore tasks to complete");
+        latch.await();
+        logger.debug("all {} stream(s) restored successfully", n);
+    }
 
+    private void writeDTOToFlux(TimeSeriesMessageDTO dto) {
+        Sinks.EmitResult result = sink.tryEmitNext(dto);
+        if (result.isFailure()) {
+            logger.warn("writeDTOToFlux - failed to emit dto (result={})", result);
+        }
     }
 
     private void sendToDeadLetterQueue(Message message) {
@@ -80,7 +119,7 @@ class DefaultDispatchMessageHandler implements MessageHandler {
         try {
             producer = producerRepository.findByName(name);
         } catch (Exception e) {
-            logger.error("could not find producer with name={}", name);
+            throw new Exception("could not find producer with name: " + name);
         }
         if (producer == null) {
             logger.error("read null producer from database for producer name={}", name);
@@ -103,7 +142,8 @@ class DefaultDispatchMessageHandler implements MessageHandler {
         return recordList;
     }
 
-    private void processTimeSeriesRecord(TimeSeriesRecord record) {
-        timeseriesRepository.save(record);
+    public void setSinkAndFlux(Sinks.Many<TimeSeriesMessageDTO> sink, Flux<TimeSeriesMessageDTO> flux) {
+        this.sink = sink;
+        this.flux = flux;
     }
 }
