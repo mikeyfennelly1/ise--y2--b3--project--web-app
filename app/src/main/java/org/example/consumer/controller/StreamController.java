@@ -22,6 +22,8 @@ import java.util.Map;
 @RequestMapping("/api/consumer")
 public class StreamController {
 
+    public record ErrorResponse(String error) {}
+
     private static final Logger logger = LoggerFactory.getLogger(StreamController.class);
     private final StreamManager streamManager;
 
@@ -45,15 +47,15 @@ public class StreamController {
     }
 
     @PostMapping("/streams")
-    public ResponseEntity<?> createNewStream(@RequestBody(required = false) Map<String, String> body) {
+    public ResponseEntity<ErrorResponse> createNewStream(@RequestBody(required = false) Map<String, String> body) {
         logger.debug("POST /api/consumer/streams - body: {}", body);
         if (hasNameField(body)) {
             logger.debug("POST /api/consumer/streams - rejected: missing or blank 'name' field");
-            return ResponseEntity.badRequest().body(Map.of("error", "Request body must include a 'name' field."));
+            return ResponseEntity.badRequest().body(new ErrorResponse("Request body must include a 'name' field."));
         }
         if (!body.containsKey("parent")) {
             logger.debug("POST /api/consumer/streams - rejected: missing 'parent' field");
-            return ResponseEntity.badRequest().body(Map.of("error", "Request body must include a 'parent' field (set to null to create a root node)."));
+            return ResponseEntity.badRequest().body(new ErrorResponse("Request body must include a 'parent' field (set to null to create a root node)."));
         }
         String streamName = body.get("name");
         String streamParentName = body.get("parent");
@@ -61,13 +63,13 @@ public class StreamController {
             streamManager.createStream(streamName, streamParentName);
         } catch (InvalidStreamNameException e) {
             logger.debug("POST /api/consumer/streams - rejected: invalid path format - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
         } catch (StreamNotFoundException e) {
             logger.debug("POST /api/consumer/streams - rejected: parent path not found - {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(e.getMessage()));
         } catch (StreamAlreadyExistsException e) {
             logger.debug("POST /api/consumer/streams - rejected: stream already exists - {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(e.getMessage()));
         }
         logger.debug("POST /api/consumer/streams - created subscription name='{}' parent='{}'", body.get("name"), body.get("parent"));
         return ResponseEntity.status(HttpStatus.CREATED).build();
@@ -78,13 +80,13 @@ public class StreamController {
     }
 
     @DeleteMapping("/streams")
-    public ResponseEntity<?> deleteStream(@RequestParam String name) {
+    public ResponseEntity<ErrorResponse> deleteStream(@RequestParam String name) {
         logger.debug("DELETE /api/consumer/streams - name='{}'", name);
         try {
             streamManager.deleteStream(name);
         } catch (StreamNotFoundException e) {
             logger.debug("DELETE /api/consumer/streams - rejected: stream not found - {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(e.getMessage()));
         }
         logger.debug("DELETE /api/consumer/streams - stream '{}' deleted successfully", name);
         return ResponseEntity.noContent().build();
@@ -109,10 +111,10 @@ public class StreamController {
             return ResponseEntity.ok(childSubscriptions);
         } catch (InvalidStreamNameException e) {
             logger.debug("GET /api/consumer/streams/children - rejected: invalid path format - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
         } catch (StreamNotFoundException e) {
             logger.debug("GET /api/consumer/streams/children - rejected: parent path not found - {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(e.getMessage()));
         }
     }
 }
