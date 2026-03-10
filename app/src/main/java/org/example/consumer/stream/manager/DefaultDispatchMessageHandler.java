@@ -1,9 +1,9 @@
 package org.example.consumer.stream.manager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.nats.client.Connection;
 import io.nats.client.Message;
 import io.nats.client.MessageHandler;
+import lombok.AllArgsConstructor;
 import org.example.consumer.model.Producer;
 import org.example.consumer.model.TimeSeriesRecord;
 import org.example.consumer.repository.ProducerRepository;
@@ -11,12 +11,17 @@ import org.example.consumer.repository.TimeseriesRepository;
 import org.example.libb3project.dto.TimeSeriesMessageDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@AllArgsConstructor
+@Component
 class DefaultDispatchMessageHandler implements MessageHandler {
     private static final Logger logger = LoggerFactory.getLogger(DefaultDispatchMessageHandler.class);
     private static final String DLQ_SUBJECT_PREFIX = "_DLQ.";
@@ -24,19 +29,7 @@ class DefaultDispatchMessageHandler implements MessageHandler {
     private final ObjectMapper objectMapper;
     private final TimeseriesRepository timeseriesRepository;
     private final ProducerRepository producerRepository;
-    private final Connection natsConnection;
-
-    DefaultDispatchMessageHandler(
-            ObjectMapper objectMapper,
-            TimeseriesRepository timeseriesRepository,
-            ProducerRepository producerRepository,
-            NatsConnectionSingleton natsConnectionSingleton
-    ) {
-        this.objectMapper = objectMapper;
-        this.timeseriesRepository = timeseriesRepository;
-        this.producerRepository = producerRepository;
-        this.natsConnection = natsConnectionSingleton.getConnection();
-    }
+    private final NatsConnectionSingleton nats;
 
     @Override
     public void onMessage(Message message) throws InterruptedException {
@@ -44,7 +37,7 @@ class DefaultDispatchMessageHandler implements MessageHandler {
         try {
             TimeSeriesMessageDTO dto = readToDto(message);
             Producer producer = getProducerByName(dto.getProducerName());
-            processDto(dto, producer);
+            List<TimeSeriesRecord> recordList = splitIntoRecordList(dto, producer);
             ackMessage();
         } catch (Exception e) {
             logger.error("unrecoverable error while processing message");
@@ -53,11 +46,15 @@ class DefaultDispatchMessageHandler implements MessageHandler {
         }
     }
 
+    private void writeDTOToFlux() {
+
+    }
+
     private void sendToDeadLetterQueue(Message message) {
         String dlqSubject = DLQ_SUBJECT_PREFIX + message.getSubject();
         logger.warn("sendToDeadLetterQueue - forwarding failed message to '{}'", dlqSubject);
         try {
-            natsConnection.publish(dlqSubject, message.getData());
+            nats.getConnection().publish(dlqSubject, message.getData());
         } catch (Exception e) {
             logger.error("sendToDeadLetterQueue - failed to publish to DLQ subject '{}': {}", dlqSubject, e.getMessage());
         }
@@ -91,7 +88,8 @@ class DefaultDispatchMessageHandler implements MessageHandler {
         return producer;
     }
 
-    private void processDto(TimeSeriesMessageDTO dto, Producer producer) {
+    private List<TimeSeriesRecord> splitIntoRecordList(TimeSeriesMessageDTO dto, Producer producer) {
+        List<TimeSeriesRecord> recordList = new ArrayList<>();
         for (Map.Entry<String, Double> entry : dto.getValues().entrySet()) {
             TimeSeriesRecord record = TimeSeriesRecord.builder()
                     .key(entry.getKey())
@@ -100,8 +98,9 @@ class DefaultDispatchMessageHandler implements MessageHandler {
                     .readTime(Instant.ofEpochSecond(dto.getReadTime()))
                     .id(UUID.randomUUID())
                     .build();
-            processTimeSeriesRecord(record);
+            recordList.add(record);
         }
+        return recordList;
     }
 
     private void processTimeSeriesRecord(TimeSeriesRecord record) {
