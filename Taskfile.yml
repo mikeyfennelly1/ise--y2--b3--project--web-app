@@ -11,9 +11,3 @@ tasks:
     cmds:
       - echo "{{.GREETING}}"
     silent: true
-
-  javadoc:
-    desc: Build Javadoc and open in browser
-    cmds:
-      - ./gradlew :app:javadoc
-      - xdg-open app/build/docs/javadoc/index.html
