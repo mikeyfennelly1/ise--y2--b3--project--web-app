@@ -1,17 +1,15 @@
 package org.example.consumer.stream.manager;
 
-import io.nats.client.Connection;
 import io.nats.client.MessageHandler;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
-class DispatcherService {
-    DefaultDispatchMessageHandler defaultDispatchMessageHandler;
-    DispatcherService() {
+@AllArgsConstructor
+class DispatcherFactory {
+    private DefaultDispatchMessageHandler defaultDispatchMessageHandler;
 
-    }
-
-    MessageHandler newDispatcher(String name, Connection natsConnection) {
+    MessageHandler getMessageHandler(String name) {
         switch (name) {
             default:
                 return defaultDispatchMessageHandler;
