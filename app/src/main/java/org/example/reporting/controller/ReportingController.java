@@ -12,12 +12,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -90,7 +92,7 @@ public class ReportingController {
             return emitter;
         }
 
-        AutoCloseable subscription = streamManager.subscribeToStreamSSESink(streamName, bytes -> {
+        Flux<ServerSentEvent<String>> subscription = streamManager.subscribeToStreamSSESink(streamName, bytes -> {
             try {
                 TimeSeriesMessageDTO msg = objectMapper.readValue(bytes, TimeSeriesMessageDTO.class);
                 Instant readTime = Instant.ofEpochSecond(msg.getReadTime());
