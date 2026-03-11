@@ -11,7 +11,7 @@ state "Stream Lifecycle" as lifecycle {
     [*] --> Validating : createStream(name, parent)
 
     Validating --> Error_InvalidFormat   : invalid name format
-    Validating --> Error_AlreadyExists   : stream already exists
+    Validating --> Error_AlreadyExists   : group already exists
     Validating --> Error_ParentNotFound  : parent not in DB (child streams)
     Validating --> Persisting            : valid
 
@@ -61,8 +61,8 @@ state Active {
 | **Active** | Stream is live and accepting messages. |
 | **Deleted** | Stream has been removed via `deleteStream(name)`. Terminal state. |
 | **Error_InvalidFormat** | Name did not pass format validation. Terminal state. |
-| **Error_AlreadyExists** | A stream with this name already exists. Terminal state. |
-| **Error_ParentNotFound** | The specified parent stream was not found in the database. Terminal state. |
+| **Error_AlreadyExists** | A group with this name already exists. Terminal state. |
+| **Error_ParentNotFound** | The specified parent group was not found in the database. Terminal state. |
 
 ### Message Handling (inside Active)
 

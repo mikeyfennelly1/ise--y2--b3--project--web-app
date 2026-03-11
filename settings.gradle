@@ -10,6 +10,6 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
 
-rootProject.name = 'ise--y2--b3--project--web-app'
+rootProject.name = 'cotcsubscriber'
 include('app')
 

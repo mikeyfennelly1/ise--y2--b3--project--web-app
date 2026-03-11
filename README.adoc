@@ -28,12 +28,12 @@ The application is a single Spring Boot service split into two subsystems.
 === Consumer subsystem (`/api/consumer`)
 
 Manages a live subscription to a NATS message broker.
-Subscriptions are organised as a *hierarchical topic tree* — each node in the tree represents a stream, and children of a node represent sub-subjects (e.g. `device` → `device.sysinfo`).
+Subscriptions are organised as a *hierarchical topic tree* — each node in the tree represents a group, and children of a node represent sub-subjects (e.g. `device` → `device.sysinfo`).
 
 Users can modify the topic tree at runtime:
 
-* **Constructively** — add a new root stream or attach a child stream beneath an existing node.
-* **Destructively** — remove a stream (and its subtree) from the tree.
+* **Constructively** — add a new root group or attach a child group beneath an existing node.
+* **Destructively** — remove a group (and its subtree) from the tree.
 
 All messages received on any subscribed topic are assumed to share the same payload format and are handled uniformly.
 Received messages are persisted to a PostgreSQL time-series table via the consumer repository.
@@ -44,7 +44,7 @@ Reads from the persisted time-series data in PostgreSQL and exposes it for query
 
 == Streaming subsystem — state diagram
 
-The diagram below shows the stream lifecycle and per-message handling flow.
+The diagram below shows the group lifecycle and per-message handling flow.
 
 [plantuml, docs/streaming-subsystem, svg]
 ....
