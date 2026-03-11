@@ -19,7 +19,7 @@ import java.util.UUID;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Entity
-@Table(name = "stream", uniqueConstraints = @UniqueConstraint(name = "uq_stream_name", columnNames = "name"))
+@Table(name = "groups", uniqueConstraints = @UniqueConstraint(name = "uq_group_name", columnNames = "name"))
 public class Group {
 
     @Id

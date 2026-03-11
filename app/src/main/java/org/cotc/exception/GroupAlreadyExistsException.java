@@ -5,7 +5,7 @@ public class GroupAlreadyExistsException extends Exception {
     private final String path;
 
     public GroupAlreadyExistsException(String path) {
-        super("Subscription already exists at path: \"" + path + "\".");
+        super("Group already exists: \"" + path + "\".");
         this.path = path;
     }
 
