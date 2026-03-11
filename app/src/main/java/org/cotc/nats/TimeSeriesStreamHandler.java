@@ -2,8 +2,14 @@ package org.cotc.nats;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nats.client.Connection;
+import io.nats.client.Dispatcher;
+import io.nats.client.JetStream;
 import io.nats.client.Message;
 import io.nats.client.MessageHandler;
+import io.nats.client.PushSubscribeOptions;
+import io.nats.client.api.AckPolicy;
+import io.nats.client.api.ConsumerConfiguration;
+import jakarta.annotation.PostConstruct;
 import org.cotc.config.NatsConfiguration;
 import org.cotc.model.Producer;
 import org.cotc.model.TimeSeriesRecord;
@@ -27,6 +33,8 @@ import java.util.concurrent.Executors;
 class TimeSeriesStreamHandler implements MessageHandler {
     private static final Logger logger = LoggerFactory.getLogger(TimeSeriesStreamHandler.class);
     private static final String DLQ_SUBJECT_PREFIX = "_DLQ.";
+    private static final String TIMESERIES_SUBJECT = "TIMESERIES";
+    private static final String DURABLE_CONSUMER_NAME = "timeseries-durable-consumer";
 
     private final ObjectMapper objectMapper;
     private final TimeseriesRepository timeseriesRepository;
@@ -43,6 +51,26 @@ class TimeSeriesStreamHandler implements MessageHandler {
         this.timeseriesRepository = timeseriesRepository;
         this.producerService = producerService;
         this.nc = natsConfiguration.getConnection();
+    }
+
+    @PostConstruct
+    private void subscribe() {
+        try {
+            JetStream js = nc.jetStream();
+            ConsumerConfiguration consumerConfig = ConsumerConfiguration.builder()
+                    .durable(DURABLE_CONSUMER_NAME)
+                    .ackPolicy(AckPolicy.Explicit)
+                    .build();
+            PushSubscribeOptions options = PushSubscribeOptions.builder()
+                    .configuration(consumerConfig)
+                    .build();
+            Dispatcher dispatcher = nc.createDispatcher();
+            js.subscribe(TIMESERIES_SUBJECT, dispatcher, this, false, options);
+            logger.debug("subscribe - subscribed to '{}' as durable consumer '{}'", TIMESERIES_SUBJECT, DURABLE_CONSUMER_NAME);
+        } catch (Exception e) {
+            logger.error("subscribe - failed to subscribe to '{}': {}", TIMESERIES_SUBJECT, e.getMessage());
+            throw new RuntimeException("failed to subscribe to NATS subject: " + TIMESERIES_SUBJECT, e);
+        }
     }
 
     @Override
