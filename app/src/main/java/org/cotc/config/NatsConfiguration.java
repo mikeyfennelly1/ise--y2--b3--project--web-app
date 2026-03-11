@@ -1,8 +1,13 @@
 package org.cotc.config;
 
 import io.nats.client.Connection;
+import io.nats.client.JetStreamApiException;
+import io.nats.client.JetStreamManagement;
 import io.nats.client.Nats;
 import io.nats.client.Options;
+import io.nats.client.api.RetentionPolicy;
+import io.nats.client.api.StorageType;
+import io.nats.client.api.StreamConfiguration;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import org.slf4j.Logger;
@@ -18,6 +23,8 @@ import java.time.Duration;
 public class NatsConfiguration {
 
     private static final Logger logger = LoggerFactory.getLogger(NatsConfiguration.class);
+    private static final String TIMESERIES_STREAM_NAME = "TIMESERIES";
+    private static final String TIMESERIES_SUBJECT = "TIMESERIES";
     @Getter
     private Connection connection;
 
@@ -39,6 +46,33 @@ public class NatsConfiguration {
         } catch (Exception e) {
             logger.debug("Failed to establish NATS connection: {}", e.getMessage());
             throw new BeanCreationException("fatal exception occurred creating connection to NATS broker: {}", e.getMessage());
+        }
+        provisionStreams();
+    }
+
+    private void provisionStreams() {
+        try {
+            JetStreamManagement jsm = connection.jetStreamManagement();
+            StreamConfiguration streamConfig = StreamConfiguration.builder()
+                    .name(TIMESERIES_STREAM_NAME)
+                    .subjects(TIMESERIES_SUBJECT)
+                    .storageType(StorageType.File)
+                    .retentionPolicy(RetentionPolicy.Limits)
+                    .build();
+            try {
+                jsm.addStream(streamConfig);
+                logger.debug("provisionStreams - stream '{}' created", TIMESERIES_STREAM_NAME);
+            } catch (JetStreamApiException e) {
+                if (e.getErrorCode() == 10058) {
+                    jsm.updateStream(streamConfig);
+                    logger.debug("provisionStreams - stream '{}' already existed, updated", TIMESERIES_STREAM_NAME);
+                } else {
+                    throw e;
+                }
+            }
+        } catch (IOException | JetStreamApiException e) {
+            logger.error("provisionStreams - failed to provision stream '{}': {}", TIMESERIES_STREAM_NAME, e.getMessage());
+            throw new BeanCreationException("failed to provision NATS stream: " + TIMESERIES_STREAM_NAME, e.getMessage());
         }
     }
 
