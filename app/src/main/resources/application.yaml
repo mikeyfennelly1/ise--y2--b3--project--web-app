@@ -29,7 +29,7 @@ management:
 
 logging:
   level:
-    root: INFO
+    root: DEBUG
     org.example: TRACE
 
 springdoc:
