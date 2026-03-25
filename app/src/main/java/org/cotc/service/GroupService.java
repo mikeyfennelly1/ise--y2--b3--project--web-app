@@ -12,6 +12,7 @@ import org.cotc.libcotc.dto.GroupDTO;
 import org.cotc.libcotc.dto.TimeSeriesMessageDTO;
 import org.cotc.model.Group;
 import org.cotc.repository.GroupRepository;
+import org.cotc.repository.ProducerRepository;
 import org.cotc.repository.TimeseriesRepository;
 import org.cotc.utils.GroupNameUtils;
 import org.cotc.utils.Translators;
@@ -31,6 +32,8 @@ public class GroupService {
     private static final Logger logger = LoggerFactory.getLogger(GroupService.class);
     private static final String TIMESERIES_SUBJECT = "TIMESERIES";
     private final GroupRepository groupRepository;
+    private final ProducerRepository producerRepository;
+    private final TimeseriesRepository timeseriesRepository;
     private final Set<String> groupNameCache = new HashSet<>();
     private final GroupNameUtils groupNameUtils;
     private final Connection natsConnection;
@@ -40,12 +43,16 @@ public class GroupService {
     @Autowired
     GroupService(
             GroupRepository groupRepository,
+            ProducerRepository producerRepository,
+            TimeseriesRepository timeseriesRepository,
             GroupNameUtils groupNameUtils,
             NatsConfiguration natsConfiguration,
             ObjectMapper objectMapper,
             Translators translators
     ) {
         this.groupRepository = groupRepository;
+        this.producerRepository = producerRepository;
+        this.timeseriesRepository = timeseriesRepository;
         this.groupNameUtils = groupNameUtils;
         this.natsConnection = natsConfiguration.getConnection();
         this.objectMapper = objectMapper;
@@ -68,8 +75,12 @@ public class GroupService {
         if (!groupRepository.groupExists(name)) {
             throw new GroupNotFoundException(name);
         }
+        timeseriesRepository.deleteByProducerGroupNameDescendants(name);
+        producerRepository.deleteByGroupNameDescendants(name);
         groupRepository.deleteAllDescendants(name);
         logger.debug("deleteGroup - deleted all descendants of '{}'", name);
+        timeseriesRepository.deleteByProducerGroupName(name);
+        producerRepository.deleteByGroupName(name);
         groupRepository.deleteByName(name);
         groupNameCache.remove(name);
         logger.debug("deleteGroup - stream '{}' deleted successfully", name);
