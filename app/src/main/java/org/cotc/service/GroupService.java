@@ -20,18 +20,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import reactor.core.publisher.Flux;
 
 import java.util.*;
 
 @Service
+@CrossOrigin
 public class GroupService {
     private static final Logger logger = LoggerFactory.getLogger(GroupService.class);
     private static final String TIMESERIES_SUBJECT = "TIMESERIES";
     private final GroupRepository groupRepository;
     private final Set<String> groupNameCache = new HashSet<>();
     private final GroupNameUtils groupNameUtils;
-    private final TimeseriesRepository timeseriesRepository;
     private final Connection natsConnection;
     private final ObjectMapper objectMapper;
     private final Translators translators;
@@ -40,12 +41,12 @@ public class GroupService {
     GroupService(
             GroupRepository groupRepository,
             GroupNameUtils groupNameUtils,
-            TimeseriesRepository timeseriesRepository,
             NatsConfiguration natsConfiguration,
-            ObjectMapper objectMapper, Translators translators) {
+            ObjectMapper objectMapper,
+            Translators translators
+    ) {
         this.groupRepository = groupRepository;
         this.groupNameUtils = groupNameUtils;
-        this.timeseriesRepository = timeseriesRepository;
         this.natsConnection = natsConfiguration.getConnection();
         this.objectMapper = objectMapper;
         this.translators = translators;
@@ -60,13 +61,6 @@ public class GroupService {
     public Optional<GroupDTO> getGroupByName(String name) {
         logger.debug("getGroupByName - querying for name='{}'", name);
         return Optional.ofNullable(groupRepository.findByName(name)).map(Group::toDTO);
-    }
-
-    public String getGroupNameById(UUID groupId) {
-        logger.debug("getGroupNameById - querying for streamId={}", groupId);
-        return groupRepository.findById(groupId)
-                .map(Group::getName)
-                .orElse(null);
     }
 
     public void deleteGroup(String name) throws GroupNotFoundException {
@@ -103,15 +97,9 @@ public class GroupService {
         return children;
     }
 
-    public List<GroupDTO> getAllGroups() {
-        logger.debug("getAllGroups - fetching all groups as DTOs");
-        return groupRepository.findAll().stream()
-                .map(Group::toDTO)
-                .toList();
-    }
-
     public List<GroupDTO> getFullGroupHierarchy() {
-        return translators.hierarchyFromGroups(groupRepository.findAll());
+        List<Group> allGroups = groupRepository.findAll();
+        return translators.hierarchyFromGroups(allGroups);
     }
 
     public boolean groupExists(String streamName) {
@@ -139,6 +127,7 @@ public class GroupService {
             group.setProducers(List.of());
             groupRepository.save(group);
             this.groupNameCache.add(group.getName());
+            logger.debug("created group: {}", groupName);
             return group.toDTO();
         }
     }
